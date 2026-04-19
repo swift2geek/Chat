@@ -385,39 +385,6 @@ struct InputView: View {
         }
     }
     
-    var stopRecordButton: some View {
-        Button {
-            onAction(.stopRecordAudio)
-        } label: {
-            theme.images.recordAudio.stopRecord
-                .viewSize(28)
-                .background(
-                    Capsule()
-                        .fill(Color.white)
-                        .shadow(color: .black.opacity(0.4), radius: 1)
-                )
-        }
-    }
-    
-    var lockRecordButton: some View {
-        Button {
-            onAction(.recordAudioLock)
-        } label: {
-            VStack(spacing: 20) {
-                theme.images.recordAudio.lockRecord
-                theme.images.recordAudio.sendRecord
-            }
-            .frame(width: 28)
-            .padding(.vertical, 16)
-            .background(
-                Capsule()
-                    .fill(Color.white)
-                    .shadow(color: .black.opacity(0.4), radius: 1)
-            )
-        }
-        .frameGetter($lockRecordFrame)
-    }
-    
     var swipeToCancel: some View {
         HStack {
             Spacer()
