@@ -256,13 +256,10 @@ struct InputView: View {
                     Group {
                         if state == .isRecordingTap {
                             stopRecordButton
-                        } else if state == .isRecordingHold {
-                            lockRecordButton
                         }
                     }
                     .sizeGetter($overlaySize)
-                    // hardcode 28 for now because sizeGetter returns 0 somehow
-                    .offset(y: (state == .isRecordingTap ? -28 : -overlaySize.height) - 24)
+                    .offset(y: -28 - 24)
                 }
             }
             .viewSize(48)
@@ -548,12 +545,6 @@ struct InputView: View {
                     }
                 }
                 
-                if value.location.y < lockRecordFrame.minY,
-                   value.location.x > recordButtonFrame.minX {
-                    cancelGesture = true
-                    onAction(.recordAudioLock)
-                }
-                
                 if value.location.x < UIScreen.main.bounds.width/2,
                    value.location.y > recordButtonFrame.minY {
                     cancelGesture = true
@@ -569,9 +560,6 @@ struct InputView: View {
                         } else if state != .waitingForRecordingPermission {
                             onAction(.send)
                         }
-                    }
-                    else if lockRecordFrame.contains(value.location) {
-                        onAction(.recordAudioLock)
                     }
                     else if deleteRecordFrame.contains(value.location) {
                         onAction(.deleteRecord)
