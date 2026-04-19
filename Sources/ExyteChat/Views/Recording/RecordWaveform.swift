@@ -147,9 +147,9 @@ struct RecordWaveformPlaying: View {
             return samples
         }
 
-        // use ceil to ensure that the adjusted.count will not be greater than maxSamples
         let ratio = Int(ceil( Double(samples.count) / maxSamples ))
-        let adjusted = stride(from: 0, to: samples.count, by: ratio).map {
+        let safeRatio = max(1, ratio)
+        let adjusted = stride(from: 0, to: samples.count, by: safeRatio).map {
             samples[$0]
         }
         return adjusted
