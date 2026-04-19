@@ -95,17 +95,6 @@ struct InputView: View {
         viewModel.state
     }
     
-    @State private var overlaySize: CGSize = .zero
-    
-    @State private var recordButtonFrame: CGRect = .zero
-    @State private var lockRecordFrame: CGRect = .zero
-    @State private var deleteRecordFrame: CGRect = .zero
-    
-    @State private var dragStart: Date?
-    @State private var tapDelayTimer: Timer?
-    @State private var cancelGesture = false
-    private let tapDelay = 0.2
-    
     var body: some View {
         VStack {
             viewOnTop
@@ -243,24 +232,29 @@ struct InputView: View {
                         .foregroundColor(theme.colors.sendButtonBackground)
                 }
                 Group {
-                    if state.canSend || !isAudioAvailable()   {
+                    if state == .isRecordingTap {
+                        Button {
+                            onAction(.stopRecordAudio)
+                        } label: {
+                            theme.images.recordAudio.stopRecord
+                                .renderingMode(.template)
+                                .foregroundColor(.white)
+                                .viewSize(20)
+                                .circleBackground(theme.colors.sendButtonBackground)
+                                .frame(width: 48, height: 48)
+                        }
+                    } else if state.canSend || !isAudioAvailable() {
                         sendButton
                             .disabled(!state.canSend)
                     } else {
-                        recordButton
-                            .highPriorityGesture(dragGesture())
+                        Button {
+                            onAction(.recordAudioTap)
+                        } label: {
+                            recordButton
+                        }
                     }
                 }
                 .compositingGroup()
-                .overlay(alignment: .top) {
-                    Group {
-                        if state == .isRecordingTap {
-                            stopRecordButton
-                        }
-                    }
-                    .sizeGetter($overlaySize)
-                    .offset(y: -28 - 24)
-                }
             }
             .viewSize(48)
         }
@@ -379,7 +373,6 @@ struct InputView: View {
         theme.images.inputView.microphone
             .viewSize(48)
             .circleBackground(theme.colors.sendButtonBackground)
-            .frameGetter($recordButtonFrame)
     }
     
     var deleteRecordButton: some View {
@@ -390,7 +383,6 @@ struct InputView: View {
                 .viewSize(24)
                 .padding(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 8))
         }
-        .frameGetter($deleteRecordFrame)
     }
     
     var stopRecordButton: some View {
@@ -530,47 +522,6 @@ struct InputView: View {
         }
     }
 
-    func dragGesture() -> some Gesture {
-        DragGesture(minimumDistance: 0.0, coordinateSpace: .global)
-            .onChanged { [state] value in
-                if dragStart == nil {
-                    dragStart = Date()
-                    cancelGesture = false
-                    tapDelayTimer = Timer.scheduledTimer(withTimeInterval: tapDelay, repeats: false) { _ in
-                        if state != .isRecordingTap, state != .waitingForRecordingPermission {
-                            DispatchQueue.main.async {
-                                self.onAction(.recordAudioHold)
-                            }
-                        }
-                    }
-                }
-                
-                if value.location.x < UIScreen.main.bounds.width/2,
-                   value.location.y > recordButtonFrame.minY {
-                    cancelGesture = true
-                    onAction(.deleteRecord)
-                }
-            }
-            .onEnded() { value in
-                if !cancelGesture {
-                    tapDelayTimer = nil
-                    if recordButtonFrame.contains(value.location) {
-                        if let dragStart = dragStart, Date().timeIntervalSince(dragStart) < tapDelay {
-                            onAction(.recordAudioTap)
-                        } else if state != .waitingForRecordingPermission {
-                            onAction(.send)
-                        }
-                    }
-                    else if deleteRecordFrame.contains(value.location) {
-                        onAction(.deleteRecord)
-                    } else {
-                        onAction(.send)
-                    }
-                }
-                dragStart = nil
-            }
-    }
-    
     private func isAudioAvailable() -> Bool {
         return availableInputs.contains(AvailableInputType.audio)
     }
